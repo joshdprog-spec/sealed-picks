@@ -1,0 +1,55 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sports Bets: the record</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#0a0e13; --panel:#10161e; --ink:#eef2f5; --muted:#8fa0ae; --line:#202c3a; --good:#3ddc84; --bad:#ff6b6b; --gold:#f2c14e;
+  --head:"Barlow Condensed","Arial Narrow",Impact,sans-serif; }
+* { box-sizing:border-box; } body { margin:0; background:radial-gradient(1100px 480px at 78% -8%, rgba(61,220,132,.07), transparent 62%), var(--bg); color:var(--ink);
+  font:15px/1.5 Inter, system-ui, sans-serif; }
+main { max-width:1100px; margin:0 auto; padding:34px 16px 70px; }
+.brand { font:800 20px/1 var(--head); letter-spacing:.06em; } .brand b { color:var(--good); }
+h1 { font:800 46px/1.05 var(--head); letter-spacing:.04em; text-transform:uppercase; margin:18px 0 6px; }
+h2 { font:700 22px/1.1 var(--head); letter-spacing:.05em; text-transform:uppercase; margin:34px 0 12px; }
+.m, .s { color:var(--muted); } .s { font-size:13px; } .good { color:var(--good); } .bad { color:var(--bad); }
+.hero { display:grid; grid-template-columns:1.4fr repeat(3, 1fr); gap:12px; margin:18px 0; }
+.tile { background:linear-gradient(180deg,#131c26,#0f151c); border:1px solid var(--line); border-radius:16px; padding:18px 20px; }
+.tile.main { border-color:rgba(61,220,132,.5); background:linear-gradient(160deg, rgba(61,220,132,.12), #0f151c 60%); }
+.tile.main.behind { border-color:rgba(255,107,107,.5); background:linear-gradient(160deg, rgba(255,107,107,.12), #0f151c 60%); } .tile.main.behind .v { color:var(--bad); }
+.k { font:700 13px/1.2 var(--head); letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.v { font:800 40px/1.05 var(--head); margin-top:6px; } .tile.main .v { font-size:78px; color:var(--good); }
+.panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:6px 14px; overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:14px; font-variant-numeric:tabular-nums; }
+th, td { text-align:left; padding:8px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+th { font:700 12px var(--head); letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+tr:last-child td { border-bottom:0; } .fp { font:12px ui-monospace, Consolas, monospace; color:var(--muted); white-space:normal; word-break:break-all; min-width:220px; }
+button { background:#18222d; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:5px 10px; cursor:pointer; }
+@media (max-width:760px) { .hero { grid-template-columns:1fr 1fr; } .tile.main { grid-column:1/-1; } h1 { font-size:36px; } }
+</style></head><body><main>
+<div class="brand">SPORTS<b>BETS</b></div>
+<h1>The record</h1>
+<p class="s">Every pick since 2026-09-28, sealed before its game and revealed after. 1 unit per pick at the price recorded when it was made
+(Caesars when available). Nothing is added or removed after the fact: each day's fingerprint is published before the games and can be checked below.</p>
+<div class="hero">
+  <div class="tile main"><div class="k">Win rate</div><div class="v">0.0%</div><div class="s">0-0 · 0 graded picks</div></div>
+  <div class="tile"><div class="k">Needed to break even</div><div class="v">0.0%</div><div class="s">the win rate these prices require</div></div>
+  <div class="tile"><div class="k">Units</div><div class="v good">+0.0</div><div class="s">profit at 1 unit a pick</div></div>
+  <div class="tile"><div class="k">Return</div><div class="v good">+0.0%</div><div class="s">per unit bet</div></div>
+</div>
+<h2>By sport</h2><div class="panel"><table><tr><th>Sport</th><th>Record</th><th>Win rate</th><th>Needed</th><th>Units</th><th>Return</th></tr><tr><td class=m>Nothing graded yet.</td></tr></table></div>
+<h2>By kind of play</h2><div class="panel"><table><tr><th>Kind</th><th>Record</th><th>Win rate</th><th>Needed</th><th>Units</th><th>Return</th></tr><tr><td class=m>Nothing graded yet.</td></tr></table></div>
+<h2>Sealed days</h2>
+<p class="s">Each morning only a fingerprint is published: SHA-256 of a secret key followed by the day's pick list. The next day the key and the
+list are published, and anyone can recompute it. "Check it" does that in your browser. The push times in this repo's GitHub history are
+GitHub's own timestamps.</p>
+<div class="panel"><table><tr><th>Day</th><th>Sealed</th><th>Picks</th><th>Fingerprint</th><th></th></tr><tr><td>2026-09-28</td><td>2026-09-28 16:51:11-07:00</td><td>2</td><td class='fp'>030911ab1c6d8ea4b318adc2f8ffac30bd899fe4b25c3acf20ce29a982e2e633</td><td><span class=m>sealed; revealed after the games</span></td></tr></table></div>
+<h2>Every pick</h2><div class="panel"><table><tr><th>Day</th><th></th><th>Bet</th><th>Price</th><th>Result</th><th>Units</th></tr><tr><td class=m>Picks appear here the day after they're sealed.</td></tr></table></div>
+<p class="s">Past results are not a promise. 21+. Bet within your means.</p>
+</main>
+<script>
+const DAYS = {};
+document.querySelectorAll("button[data-day]").forEach(b => b.onclick = async () => {
+  const d = DAYS[b.dataset.day], buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(d.key + d.payload));
+  const hex = [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, "0")).join("");
+  b.nextElementSibling.innerHTML = hex === d.fp ? "<b class=good>✓ matches</b>" : "<b class=bad>✗ does not match</b>";
+});
+</script></body></html>
