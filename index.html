@@ -30,23 +30,23 @@ button { background:#18222d; color:var(--ink); border:1px solid var(--line); bor
 <p class="s">Every pick since 2026-09-28, sealed before its game and revealed after. 1 unit per pick at the price recorded when it was made
 (Caesars when available). Nothing is added or removed after the fact: each day's fingerprint is published before the games and can be checked below.</p>
 <div class="hero">
-  <div class="tile main"><div class="k">Win rate</div><div class="v">0.0%</div><div class="s">0-0 · 0 graded picks</div></div>
-  <div class="tile"><div class="k">Needed to break even</div><div class="v">0.0%</div><div class="s">the win rate these prices require</div></div>
-  <div class="tile"><div class="k">Units</div><div class="v good">+0.0</div><div class="s">profit at 1 unit a pick</div></div>
-  <div class="tile"><div class="k">Return</div><div class="v good">+0.0%</div><div class="s">per unit bet</div></div>
+  <div class="tile main"><div class="k">Win rate</div><div class="v">100.0%</div><div class="s">2-0 · 2 graded picks</div></div>
+  <div class="tile"><div class="k">Needed to break even</div><div class="v">45.2%</div><div class="s">the win rate these prices require</div></div>
+  <div class="tile"><div class="k">Units</div><div class="v good">+2.6</div><div class="s">profit at 1 unit a pick</div></div>
+  <div class="tile"><div class="k">Return</div><div class="v good">+128.2%</div><div class="s">per unit bet</div></div>
 </div>
-<h2>By sport</h2><div class="panel"><table><tr><th>Sport</th><th>Record</th><th>Win rate</th><th>Needed</th><th>Units</th><th>Return</th></tr><tr><td class=m>Nothing graded yet.</td></tr></table></div>
-<h2>By kind of play</h2><div class="panel"><table><tr><th>Kind</th><th>Record</th><th>Win rate</th><th>Needed</th><th>Units</th><th>Return</th></tr><tr><td class=m>Nothing graded yet.</td></tr></table></div>
+<h2>By sport</h2><div class="panel"><table><tr><th>Sport</th><th>Record</th><th>Win rate</th><th>Needed</th><th>Units</th><th>Return</th></tr><tr><td>NFL</td><td>2-0</td><td><b>100.0%</b></td><td>45.2%</td><td class='good'>+2.6</td><td>+128.2%</td></tr></table></div>
+<h2>By kind of play</h2><div class="panel"><table><tr><th>Kind</th><th>Record</th><th>Win rate</th><th>Needed</th><th>Units</th><th>Return</th></tr><tr><td>search find</td><td>2-0</td><td><b>100.0%</b></td><td>45.2%</td><td class='good'>+2.6</td><td>+128.2%</td></tr></table></div>
 <h2>Sealed days</h2>
 <p class="s">Each morning only a fingerprint is published: SHA-256 of a secret key followed by the day's pick list. The next day the key and the
 list are published, and anyone can recompute it. "Check it" does that in your browser. The push times in this repo's GitHub history are
 GitHub's own timestamps.</p>
-<div class="panel"><table><tr><th>Day</th><th>Sealed</th><th>Picks</th><th>Fingerprint</th><th></th></tr><tr><td>2026-09-28</td><td>2026-09-28 16:51:11-07:00</td><td>2</td><td class='fp'>030911ab1c6d8ea4b318adc2f8ffac30bd899fe4b25c3acf20ce29a982e2e633</td><td><span class=m>sealed; revealed after the games</span></td></tr></table></div>
-<h2>Every pick</h2><div class="panel"><table><tr><th>Day</th><th></th><th>Bet</th><th>Price</th><th>Result</th><th>Units</th></tr><tr><td class=m>Picks appear here the day after they're sealed.</td></tr></table></div>
+<div class="panel"><table><tr><th>Day</th><th>Sealed</th><th>Picks</th><th>Fingerprint</th><th></th></tr><tr><td>2026-09-29</td><td>2026-09-29 13:41:53-07:00</td><td>14</td><td class='fp'>ac18cda9d87e0241ce2f90dffcc225cca4d3ae725eebebeaa0a8a46e41132884</td><td><span class=m>sealed; revealed after the games</span></td></tr><tr><td>2026-09-28</td><td>2026-09-28 16:51:11-07:00</td><td>2</td><td class='fp'>030911ab1c6d8ea4b318adc2f8ffac30bd899fe4b25c3acf20ce29a982e2e633</td><td><button data-day="2026-09-28">Check it</button> <span class=chk></span></td></tr></table></div>
+<h2>Every pick</h2><div class="panel"><table><tr><th>Day</th><th></th><th>Bet</th><th>Price</th><th>Result</th><th>Units</th></tr><tr><td>2026-09-28</td><td>NFL</td><td>Chicago Bears <span class='m'>(Philadelphia Eagles at Chicago Bears)</span></td><td>+168 <span class='m'>Caesars</span></td><td class='good'>WON PHI 7, CHI 27</td><td>+1.7</td></tr><tr><td>2026-09-28</td><td>NFL</td><td>Under 42.5 <span class='m'>(Philadelphia Eagles at Chicago Bears)</span></td><td>-113 <span class='m'>Caesars</span></td><td class='good'>WON PHI 7, CHI 27</td><td>+0.9</td></tr></table></div>
 <p class="s">Past results are not a promise. 21+. Bet within your means.</p>
 </main>
 <script>
-const DAYS = {};
+const DAYS = {"2026-09-28": {"fp": "030911ab1c6d8ea4b318adc2f8ffac30bd899fe4b25c3acf20ce29a982e2e633", "key": "d2cf1a588352aae98e8a0d2351541ecc", "payload": "[{\"away\":\"PHI\",\"bet\":\"Chicago Bears\",\"book\":\"Caesars\",\"date\":\"2026-09-28\",\"game\":\"Philadelphia Eagles at Chicago Bears\",\"home\":\"CHI\",\"kind\":\"search find\",\"line\":null,\"market\":\"moneyline\",\"price\":168,\"side\":\"home\",\"sport\":\"nfl\",\"start\":\"2026-09-29T00:15:00+00:00\"},{\"away\":\"PHI\",\"bet\":\"Under 42.5\",\"book\":\"Caesars\",\"date\":\"2026-09-28\",\"game\":\"Philadelphia Eagles at Chicago Bears\",\"home\":\"CHI\",\"kind\":\"search find\",\"line\":42.5,\"market\":\"under\",\"price\":-113,\"side\":null,\"sport\":\"nfl\",\"start\":\"2026-09-29T00:15:00+00:00\"}]"}};
 document.querySelectorAll("button[data-day]").forEach(b => b.onclick = async () => {
   const d = DAYS[b.dataset.day], buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(d.key + d.payload));
   const hex = [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, "0")).join("");

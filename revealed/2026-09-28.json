@@ -1,0 +1,6 @@
+{
+ "date": "2026-09-28",
+ "fingerprint": "030911ab1c6d8ea4b318adc2f8ffac30bd899fe4b25c3acf20ce29a982e2e633",
+ "key": "d2cf1a588352aae98e8a0d2351541ecc",
+ "payload": "[{\"away\":\"PHI\",\"bet\":\"Chicago Bears\",\"book\":\"Caesars\",\"date\":\"2026-09-28\",\"game\":\"Philadelphia Eagles at Chicago Bears\",\"home\":\"CHI\",\"kind\":\"search find\",\"line\":null,\"market\":\"moneyline\",\"price\":168,\"side\":\"home\",\"sport\":\"nfl\",\"start\":\"2026-09-29T00:15:00+00:00\"},{\"away\":\"PHI\",\"bet\":\"Under 42.5\",\"book\":\"Caesars\",\"date\":\"2026-09-28\",\"game\":\"Philadelphia Eagles at Chicago Bears\",\"home\":\"CHI\",\"kind\":\"search find\",\"line\":42.5,\"market\":\"under\",\"price\":-113,\"side\":null,\"sport\":\"nfl\",\"start\":\"2026-09-29T00:15:00+00:00\"}]"
+}
