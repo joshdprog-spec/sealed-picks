@@ -1,0 +1,6 @@
+{
+ "date": "2026-10-22",
+ "fingerprint": "67fa4ddcb72c2540bfa54409664fabdce071072468c20d274e3e55c2f7a65f29",
+ "key": "fd9f9bf32f9c470d9228bede127403c1",
+ "payload": "[{\"away\":\"DEN\",\"bet\":\"Denver Nuggets\",\"book\":\"Caesars\",\"date\":\"2026-10-22\",\"game\":\"Denver Nuggets at Oklahoma City Thunder\",\"green\":\"green\",\"home\":\"OKC\",\"kind\":\"search find\",\"line\":null,\"market\":\"moneyline\",\"price\":222,\"side\":\"away\",\"size\":1.2,\"sport\":\"nba\",\"start\":\"2026-10-23T01:30:00+00:00\"},{\"away\":\"NE\",\"bet\":\"New England Patriots +2.5 (spread)\",\"book\":\"Caesars\",\"date\":\"2026-10-22\",\"game\":\"New England Patriots at Chicago Bears\",\"green\":\"green\",\"home\":\"CHI\",\"kind\":\"search find\",\"line\":2.5,\"market\":\"spread\",\"price\":-104,\"side\":\"away\",\"size\":1.2,\"sport\":\"nfl\",\"start\":\"2026-10-23T00:15:00+00:00\"},{\"away\":\"NE\",\"bet\":\"Under 50.5\",\"book\":\"Caesars\",\"date\":\"2026-10-22\",\"game\":\"New England Patriots at Chicago Bears\",\"green\":\"green\",\"home\":\"CHI\",\"kind\":\"search find\",\"line\":50.5,\"market\":\"under\",\"price\":-108,\"side\":null,\"size\":1.2,\"sport\":\"nfl\",\"start\":\"2026-10-23T00:15:00+00:00\"}]"
+}
