@@ -1,0 +1,7 @@
+{
+ "date": "2026-10-30",
+ "sealed_at": "2026-10-30T11:00:31-07:00",
+ "count": 50,
+ "fingerprint": "e3b561b22336fe77993ed48ecb75cac999cba95318019a80c70ebc9a4b48bd01",
+ "how": "SHA-256 of the key followed by the pick list (both published the day after)"
+}
