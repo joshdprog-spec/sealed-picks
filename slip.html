@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#101214"><meta name="robots" content="noindex">
+<title>Bet Slip</title>
+<style>
+:root { --bg:#f6f5f1; --panel:#fff; --ink:#1d1d1b; --muted:#6b6a64; --line:#e3e1da; --good:#1f7a4a; --accent:#1f7a4a; }
+@media (prefers-color-scheme: dark) { :root { --bg:#101214; --panel:#1a1d20; --ink:#ecebe6; --muted:#9c9a92; --line:#2c3035; --good:#5cc28a; --accent:#5cc28a; } }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif; -webkit-tap-highlight-color:transparent; }
+header { position:sticky; top:0; z-index:2; background:var(--bg); padding:calc(10px + env(safe-area-inset-top)) 16px 10px; border-bottom:1px solid var(--line); }
+h1 { font-size:20px; margin:0; } .s { color:var(--muted); font-size:13px; }
+.bar { height:8px; background:var(--line); border-radius:4px; margin:8px 0 4px; overflow:hidden; } .bar i { display:block; height:100%; background:var(--good); transition:width .2s; }
+.tools { display:flex; gap:8px; margin-top:8px; } .tools button { flex:1; font:inherit; font-size:14px; padding:8px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--ink); }
+.tools button.on { border-color:var(--accent); color:var(--accent); font-weight:600; }
+main { padding:8px 12px calc(40px + env(safe-area-inset-bottom)); max-width:640px; margin:0 auto; }
+.book { margin:16px 0 6px; display:flex; justify-content:space-between; align-items:baseline; gap:8px; } .book b { font-size:18px; }
+.row { display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:8px; cursor:pointer; user-select:none; }
+.row .box { flex:none; width:28px; height:28px; border-radius:8px; border:2px solid var(--muted); display:grid; place-items:center; font-weight:700; color:var(--bg); }
+.row.done .box { background:var(--good); border-color:var(--good); } .row.done .box::after { content:"✓"; }
+.row.done .what, .row.done .amt { opacity:.45; text-decoration:line-through; }
+.what { flex:1; min-width:0; } .what b { display:block; font-size:16px; } .amt { text-align:right; flex:none; font-variant-numeric:tabular-nums; }
+.amt b { display:block; font-size:18px; } .empty { text-align:center; margin-top:40px; }
+.send { display:block; width:100%; font:inherit; font-weight:600; padding:12px; margin:18px 0 6px; border-radius:10px; border:1px solid var(--accent); background:var(--panel); color:var(--accent); }
+@media print { body { background:#fff; color:#000; } header { position:static; border:none; } .tools, .bar, .send { display:none; }
+  .row { break-inside:avoid; border:1px solid #999; padding:6px 10px; margin-bottom:4px; } .row .box { border-color:#000; } .s { color:#333; } }
+</style></head><body>
+<header>
+  <h1>Bet slip <span class="s" id="date"></span></h1>
+  <div class="bar"><i id="prog" style="width:0"></i></div>
+  <div class="s" id="sum">Opening…</div>
+  <div class="tools"><button id="hide">Hide placed</button><button id="reload">Refresh</button><button onclick="window.print()">Print</button></div>
+</header>
+<main id="list"></main>
+<script>
+// Your bet slip, anywhere. The slip on this site is locked; the key is in your link after the #, which your browser never
+// sends to the site. Ticks are kept on this phone; at home, Send my ticks to the PC puts them in your bet log.
+const $ = id => document.getElementById(id), enc = new TextEncoder();
+const money = x => "$" + Math.round(x).toLocaleString();
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const unb64 = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
+const b64 = s => btoa(String.fromCharCode(...enc.encode(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+let S = null, HIDE = false, TICKS = {};
+const store = (k, v) => { try { localStorage.setItem(k, v); } catch {} }, read = k => { try { return localStorage.getItem(k); } catch { return null; } };
+const m = location.hash.match(/k=([\w-]+)/);
+if (m) { store("road_key", m[1]); history.replaceState(null, "", location.pathname); }  // remembered, so a Home Screen icon opens it too
+const KEY = m ? m[1] : read("road_key");
+HIDE = read("slip_hide") === "1";
+const hmac = async (k, data) => new Uint8Array(await crypto.subtle.sign("HMAC", await crypto.subtle.importKey("raw", k, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]), data));
+const join = (...xs) => { const out = new Uint8Array(xs.reduce((s, x) => s + x.length, 0)); let i = 0; for (const x of xs) { out.set(x, i); i += x.length; } return out; };
+async function unlock(k, box) {
+  const n = unb64(box.n), c = unb64(box.c), t = await hmac(await hmac(k, enc.encode("sports-bets road slip: check")), join(n, c));
+  if (t.length !== unb64(box.t).length || t.some((x, i) => x !== unb64(box.t)[i])) throw new Error("key");
+  const ke = await hmac(k, enc.encode("sports-bets road slip: lock")), blocks = [];
+  for (let i = 0; i * 32 < c.length; i++) { const ctr = new Uint8Array(4); new DataView(ctr.buffer).setUint32(0, i); blocks.push(hmac(ke, join(n, ctr))); }
+  const ks = join(...await Promise.all(blocks));
+  return new TextDecoder().decode(c.map((x, i) => x ^ ks[i]));
+}
+async function get() {
+  if (!KEY) { $("sum").textContent = "This slip opens from your own link (Sports Bets - Today's plays on your PC shows it)."; return; }
+  try {
+    const box = await (await fetch("slip.json?t=" + Date.now(), { cache: "no-store" })).json();
+    S = JSON.parse(await unlock(unb64(KEY), box));
+    TICKS = JSON.parse(read("road_ticks_" + S.date) || "{}");
+    draw();
+  } catch (e) {
+    $("sum").textContent = e.message === "key" ? "This link's key doesn't open the slip. Open the newest link from Today's plays on your PC."
+      : "Can't load the slip right now (no signal?). Tap Refresh to try again.";
+  }
+}
+function draw() {
+  $("hide").classList.toggle("on", HIDE); $("hide").textContent = HIDE ? "Show placed" : "Hide placed";
+  const today = new Date().toLocaleDateString("en-CA"), rows = S.rows || [];
+  $("date").textContent = "· " + new Date(S.date + "T12:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  const made = new Date(S.made).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const sized = S.bank != null ? ` · sized off your ${money(S.bank)} bankroll${S.bank_at ? ` (as of ${new Date(S.bank_at + "T12:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })})` : ""}` : "";
+  if (S.date !== today) { $("sum").textContent = ""; $("list").innerHTML = `<p class="empty s">No slip for today yet: the newest one is for ${esc(S.date)}. Today's comes after the 9 AM run.</p>`; return; }
+  if (!rows.length) { $("sum").textContent = ""; $("list").innerHTML = `<p class="empty s">${esc(S.note || "Nothing to bet today.")}</p>`; return; }
+  const done = rows.filter(r => TICKS[r.key]), all$ = rows.reduce((s, r) => s + r.amt, 0), done$ = done.reduce((s, r) => s + r.amt, 0);
+  $("prog").style.width = (100 * done.length / rows.length).toFixed(1) + "%";
+  $("sum").textContent = `Placed ${done.length} of ${rows.length} · ${money(done$)} of ${money(all$)} · made ${made}${sized}`;
+  const groups = {};
+  for (const r of rows) (groups[r.book] ||= []).push(r);
+  const order = Object.keys(groups).sort((a, b) => groups[b].reduce((s, x) => s + x.amt, 0) - groups[a].reduce((s, x) => s + x.amt, 0));
+  $("list").innerHTML = order.map(book => {
+    const xs = groups[book].slice().sort((a, b) => (a.start || "").localeCompare(b.start || "")), left = xs.filter(r => !TICKS[r.key]);
+    return `<div class="book"><b>${esc(book)}</b><span class="s">${left.length ? `${left.length} left · ${money(left.reduce((s, r) => s + r.amt, 0))}` : "all placed"}</span></div>`
+      + (HIDE ? left : xs).map(r => `<div class="row ${TICKS[r.key] ? "done" : ""}" data-key="${esc(r.key)}">
+          <div class="box"></div>
+          <div class="what"><b>${esc(r.label)}</b><span class="s">${esc(r.time)} · ${esc(r.sport.toUpperCase())} · ${esc(r.game)}</span></div>
+          <div class="amt"><b>${money(r.amt)}</b><span class="s">${r.price > 0 ? "+" : ""}${r.price}</span></div></div>`).join("");
+  }).join("") + (done.length ? `<button class="send" id="send">At home: send my ${done.length} tick${done.length === 1 ? "" : "s"} to the PC</button>
+      <p class="s">On your home Wi-Fi with the PC on: this opens the PC's slip, which puts these bets in your bet log.</p>` : "");
+  document.querySelectorAll(".row").forEach(el => el.onclick = () => {
+    const key = el.dataset.key;
+    if (TICKS[key]) delete TICKS[key]; else TICKS[key] = new Date().toISOString();
+    store("road_ticks_" + S.date, JSON.stringify(TICKS)); draw();
+  });
+  if ($("send")) $("send").onclick = () => { location.href = S.home + "#road=" + b64(JSON.stringify(rows.filter(r => TICKS[r.key]))); };
+}
+$("hide").onclick = () => { HIDE = !HIDE; store("slip_hide", HIDE ? "1" : "0"); if (S) draw(); };
+$("reload").onclick = get;
+get();
+document.addEventListener("visibilitychange", () => { if (!document.hidden) get(); });
+</script>
+</body></html>
