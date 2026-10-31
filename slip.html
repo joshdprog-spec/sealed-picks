@@ -78,19 +78,22 @@ function draw() {
   if (S.date !== today) { $("sum").textContent = ""; $("list").innerHTML = `<p class="empty s">No slip for today yet: the newest one is for ${esc(S.date)}. Today's comes after the 9 AM run.</p>`; return; }
   if (!rows.length) { $("sum").textContent = ""; $("list").innerHTML = `<p class="empty s">${esc(S.note || "Nothing to bet today.")}</p>`; return; }
   const done = rows.filter(r => TICKS[r.key]), all$ = rows.reduce((s, r) => s + r.amt, 0), done$ = done.reduce((s, r) => s + r.amt, 0);
+  const priced = rows.every(r => r.amt != null);  // no amounts until Today's plays has been opened on the PC once (J-2318)
   $("prog").style.width = (100 * done.length / rows.length).toFixed(1) + "%";
-  $("sum").textContent = `Placed ${done.length} of ${rows.length} · ${money(done$)} of ${money(all$)} · made ${made}${sized}`;
+  $("sum").textContent = priced ? `Placed ${done.length} of ${rows.length} · ${money(done$)} of ${money(all$)} · made ${made}${sized}`
+    : `Placed ${done.length} of ${rows.length} · made ${made}`;
   const groups = {};
   for (const r of rows) (groups[r.book] ||= []).push(r);
   const order = Object.keys(groups).sort((a, b) => groups[b].reduce((s, x) => s + x.amt, 0) - groups[a].reduce((s, x) => s + x.amt, 0));
-  $("list").innerHTML = order.map(book => {
+  $("list").innerHTML = (S.note ? `<p class="s" id="note">${esc(S.note)}</p>` : "") + order.map(book => {
     const xs = groups[book].slice().sort((a, b) => (a.start || "").localeCompare(b.start || "")), left = xs.filter(r => !TICKS[r.key]);
-    return `<div class="book"><b>${esc(book)}</b><span class="s">${left.length ? `${left.length} left · ${money(left.reduce((s, r) => s + r.amt, 0))}` : "all placed"}</span></div>`
+    return `<div class="book"><b>${esc(book)}</b><span class="s">${left.length ? `${left.length} left` + (priced ? ` · ${money(left.reduce((s, r) => s + r.amt, 0))}` : "") : "all placed"}</span></div>`
       + (HIDE ? left : xs).map(r => `<div class="row ${TICKS[r.key] ? "done" : ""}" data-key="${esc(r.key)}">
           <div class="box"></div>
           <div class="what"><b>${esc(r.label)}</b><span class="s">${esc(r.time)} · ${esc(r.sport.toUpperCase())} · ${esc(r.game)}</span></div>
-          <div class="amt"><b>${money(r.amt)}</b><span class="s">${r.price > 0 ? "+" : ""}${r.price}</span></div></div>`).join("");
-  }).join("") + (done.length ? `<button class="send" id="send">At home: send my ${done.length} tick${done.length === 1 ? "" : "s"} to the PC</button>
+          <div class="amt"><b>${r.amt != null ? money(r.amt) : "—"}</b><span class="s">${r.price > 0 ? "+" : ""}${r.price}</span></div></div>`).join("");
+  }).join("") + (done.length && !priced ? `<p class="s">No amounts yet, so these ticks stay on this phone: at home, add them to your bet log with what you staked.</p>`
+    : done.length ? `<button class="send" id="send">At home: send my ${done.length} tick${done.length === 1 ? "" : "s"} to the PC</button>
       <p class="s">On your home Wi-Fi with the PC on: this opens the PC's slip, which puts these bets in your bet log.</p>` : "");
   document.querySelectorAll(".row").forEach(el => el.onclick = () => {
     const key = el.dataset.key;
