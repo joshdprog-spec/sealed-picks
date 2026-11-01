@@ -36,6 +36,7 @@ main { padding:8px 12px calc(40px + env(safe-area-inset-bottom)); max-width:640p
 <script>
 // Your bet slip, anywhere. The slip on this site is locked; the key is in your link after the #, which your browser never
 // sends to the site. Ticks are kept on this phone; at home, Send my ticks to the PC puts them in your bet log.
+// Amounts are worked out here, from the newest plan this phone has seen (from a slip, or from the link in Today's plays).
 const $ = id => document.getElementById(id), enc = new TextEncoder();
 const money = x => "$" + Math.round(x).toLocaleString();
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -43,10 +44,55 @@ const unb64 = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") 
 const b64 = s => btoa(String.fromCharCode(...enc.encode(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 let S = null, HIDE = false, TICKS = {};
 const store = (k, v) => { try { localStorage.setItem(k, v); } catch {} }, read = k => { try { return localStorage.getItem(k); } catch { return null; } };
-const m = location.hash.match(/k=([\w-]+)/);
-if (m) { store("road_key", m[1]); history.replaceState(null, "", location.pathname); }  // remembered, so a Home Screen icon opens it too
+const m = location.hash.match(/k=([\w-]+)/), mc = location.hash.match(/c=([\w-]+)/);
+if (m) store("road_key", m[1]);  // remembered, so a Home Screen icon opens it too
+if (mc) { try { keepCtx(JSON.parse(new TextDecoder().decode(unb64(mc[1])))); } catch {} }  // your plan, from Today's plays' link
+if (m || mc) history.replaceState(null, "", location.pathname);
 const KEY = m ? m[1] : read("road_key");
 HIDE = read("slip_hide") === "1";
+// the newest plan this phone has seen ({plan, mine, bank, at}); a tie goes to the one coming in
+function keepCtx(c) {
+  if (!c || !c.plan) return;
+  let old = null; try { old = JSON.parse(read("road_ctx")); } catch {}
+  if (!old || (c.at || "") >= (old.at || "")) store("road_ctx", JSON.stringify(c));
+}
+// ---------- sizing: road_slip.py size() and today_plan.js, step for step ----------
+const DATA_BOOKS = { caesars: "Caesars", betmgm: "BetMGM", draftkings: "DraftKings", fanduel: "FanDuel", bet365: "bet365",
+                     bet_rivers_co: "BetRivers", fanatics: "Fanatics", hardrock: "Hard Rock" };
+const amer = d => d >= 2 ? Math.round((d - 1) * 100) : -Math.round(100 / (d - 1));
+const slipKey = b => ["date", "sport", "away", "home", "market", "scope", "side"].map(k => String(b[k] || "")).join("|");
+function planStake(plan, bank, d, edge, sport, market, mult = 1) {
+  if (plan.base) bank = Math.min(bank, plan.base);
+  const s = mult * (plan.stake.flat != null ? bank * plan.stake.flat / 100 : bank * Math.min(0.15, Math.max(0, plan.stake.kelly * edge / (d - 1))));
+  const cap = plan.caps ? (plan.caps[sport] || Infinity) * (plan.caps.totals && (market === "over" || market === "under") ? plan.caps.totals : 1)
+    : plan.cap || Infinity;
+  return Math.min(s, cap, bank);
+}
+const planPlay = (plan, ids) => (ids || []).map(id => plan.plays[id] && { id, ...plan.plays[id] }).filter(Boolean).sort((a, b) => b.edge - a.edge)[0] || null;
+function size(cards, ctx) {
+  const plan = ctx.plan, mine = ctx.mine, bank = ctx.bank || 0, used = {}, rows = [];
+  for (const c of cards) {
+    let d = c.dec, book = null;
+    if (mine) {
+      const opts = Object.entries(c.prices).filter(([b]) => mine.includes(b));
+      if (!opts.length) continue;
+      const top = Math.max(...opts.map(o => o[1]));
+      [book, d] = opts.filter(o => o[1] >= top - 1e-9).sort((a, b) => (used[a[0]] || 0) - (used[b[0]] || 0))[0];
+      used[book] = (used[book] || 0) + 1;
+    }
+    if (!c.bet) continue;
+    const bet = { ...c.bet };
+    if (book) { bet.price = amer(d); bet.book = DATA_BOOKS[book]; }
+    const pp = planPlay(plan, c.ids), minP = "minPrice" in plan ? plan.minPrice : -500;
+    if (!pp || (minP && d <= 1 + 100 / -minP + 1e-9)) continue;
+    const amt = Math.floor(planStake(plan, bank, d, pp.edge, c.sport, c.market, c.green === "green" ? 1.2 : c.green === "red" ? 0.5 : 1));
+    if (amt < 1) continue;
+    bet.stake = amt;
+    rows.push({ key: slipKey(bet), book: book ? DATA_BOOKS[book] : bet.book || "Best price", time: c.time, start: c.start, label: c.label,
+                game: c.game, sport: c.sport, price: amer(d), amt, bet });
+  }
+  return rows;
+}
 const hmac = async (k, data) => new Uint8Array(await crypto.subtle.sign("HMAC", await crypto.subtle.importKey("raw", k, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]), data));
 const join = (...xs) => { const out = new Uint8Array(xs.reduce((s, x) => s + x.length, 0)); let i = 0; for (const x of xs) { out.set(x, i); i += x.length; } return out; };
 async function unlock(k, box) {
@@ -62,6 +108,9 @@ async function get() {
   try {
     const box = await (await fetch("slip.json?t=" + Date.now(), { cache: "no-store" })).json();
     S = JSON.parse(await unlock(unb64(KEY), box));
+    keepCtx(S.ctx);
+    let C = null; try { C = JSON.parse(read("road_ctx")); } catch {}
+    if (C && C.plan && S.cards) { S.rows = size(S.cards, C); S.bank = C.bank; S.bank_at = C.at; S.note = ""; }  // sized here (J-2318)
     TICKS = JSON.parse(read("road_ticks_" + S.date) || "{}");
     draw();
   } catch (e) {
@@ -78,7 +127,7 @@ function draw() {
   if (S.date !== today) { $("sum").textContent = ""; $("list").innerHTML = `<p class="empty s">No slip for today yet: the newest one is for ${esc(S.date)}. Today's comes after the 9 AM run.</p>`; return; }
   if (!rows.length) { $("sum").textContent = ""; $("list").innerHTML = `<p class="empty s">${esc(S.note || "Nothing to bet today.")}</p>`; return; }
   const done = rows.filter(r => TICKS[r.key]), all$ = rows.reduce((s, r) => s + r.amt, 0), done$ = done.reduce((s, r) => s + r.amt, 0);
-  const priced = rows.every(r => r.amt != null);  // no amounts until Today's plays has been opened on the PC once (J-2318)
+  const priced = rows.every(r => r.amt != null);  // no amounts until this phone has your plan (J-2318)
   $("prog").style.width = (100 * done.length / rows.length).toFixed(1) + "%";
   $("sum").textContent = priced ? `Placed ${done.length} of ${rows.length} · ${money(done$)} of ${money(all$)} · made ${made}${sized}`
     : `Placed ${done.length} of ${rows.length} · made ${made}`;
