@@ -5,15 +5,18 @@
 <meta name="theme-color" content="#101214"><meta name="robots" content="noindex">
 <title>Bet Slip</title>
 <style>
-:root { --bg:#f6f5f1; --panel:#fff; --ink:#1d1d1b; --muted:#6b6a64; --line:#e3e1da; --good:#1f7a4a; --accent:#1f7a4a; }
-@media (prefers-color-scheme: dark) { :root { --bg:#101214; --panel:#1a1d20; --ink:#ecebe6; --muted:#9c9a92; --line:#2c3035; --good:#5cc28a; --accent:#5cc28a; } }
+:root { --bg:#f6f5f1; --panel:#fff; --ink:#1d1d1b; --muted:#6b6a64; --line:#e3e1da; --good:#1f7a4a; --accent:#1f7a4a; --bad:#b3261e; }
+@media (prefers-color-scheme: dark) { :root { --bg:#101214; --panel:#1a1d20; --ink:#ecebe6; --muted:#9c9a92; --line:#2c3035; --good:#5cc28a; --accent:#5cc28a; --bad:#f2827a; } }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif; -webkit-tap-highlight-color:transparent; }
 header { position:sticky; top:0; z-index:2; background:var(--bg); padding:calc(10px + env(safe-area-inset-top)) 16px 10px; border-bottom:1px solid var(--line); }
 h1 { font-size:20px; margin:0; } .s { color:var(--muted); font-size:13px; }
 .bar { height:8px; background:var(--line); border-radius:4px; margin:8px 0 4px; overflow:hidden; } .bar i { display:block; height:100%; background:var(--good); transition:width .2s; }
 .tools { display:flex; gap:8px; margin-top:8px; } .tools button { flex:1; font:inherit; font-size:14px; padding:8px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--ink); }
-.tools button.on { border-color:var(--accent); color:var(--accent); font-weight:600; }
+.tools button.on { border-color:var(--accent); color:var(--accent); font-weight:600; } .tools button:disabled, button.send:disabled { opacity:.6; }
+#msg { min-height:18px; margin-top:6px; font-size:14px; } #msg.good { color:var(--good); } #msg.bad { color:var(--bad); font-weight:600; }
+#msg.wait::before { content:""; display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:-1px; border:2px solid var(--muted); border-top-color:transparent; border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
 main { padding:8px 12px calc(40px + env(safe-area-inset-bottom)); max-width:640px; margin:0 auto; }
 .book { margin:16px 0 6px; display:flex; justify-content:space-between; align-items:baseline; gap:8px; } .book b { font-size:18px; }
 .row { display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:8px; cursor:pointer; user-select:none; }
@@ -31,6 +34,7 @@ main { padding:8px 12px calc(40px + env(safe-area-inset-bottom)); max-width:640p
   <div class="bar"><i id="prog" style="width:0"></i></div>
   <div class="s" id="sum">Opening…</div>
   <div class="tools"><button id="hide">Hide placed</button><button id="reload">Refresh</button><button onclick="window.print()">Print</button></div>
+  <div id="msg" class="s" role="status" aria-live="polite"></div>
 </header>
 <main id="list"></main>
 <script>
@@ -103,19 +107,38 @@ async function unlock(k, box) {
   const ks = join(...await Promise.all(blocks));
   return new TextDecoder().decode(c.map((x, i) => x ^ ks[i]));
 }
+// Every press shows at once that it was heard (a turning wheel and a seconds count), can't be pressed again meanwhile,
+// and ends with a plain line: it worked, or what went wrong (J-2747).
+const clock = () => new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+let sayT = null;
+function say(text, kind = "") {
+  clearInterval(sayT); const el = $("msg"), t0 = Date.now();
+  el.className = "s " + kind; el.textContent = text;
+  if (kind === "wait") sayT = setInterval(() => { el.textContent = `${text} ${Math.round((Date.now() - t0) / 1000)} s`; }, 1000);
+  if (kind === "good") sayT = setTimeout(() => { if (el.textContent === text) { el.textContent = ""; el.className = "s"; } }, 8000);
+}
+// a fetch that gives up after `secs` (a weak signal must never leave a press hanging)
+async function fetchT(url, opts = {}, secs = 15) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), secs * 1000);
+  try { return await fetch(url, { ...opts, signal: c.signal }); } finally { clearTimeout(t); }
+}
+// null when it worked, or what went wrong in plain words
 async function get() {
-  if (!KEY) { $("sum").textContent = "This slip opens from your own link (Sports Bets - Today's plays on your PC shows it)."; return; }
+  if (!KEY) { $("sum").textContent = "This slip opens from your own link (Sports Bets - Today's plays on your PC shows it)."; return "this slip opens from your own link."; }
   try {
-    const box = await (await fetch("slip.json?t=" + Date.now(), { cache: "no-store" })).json();
+    const box = await (await fetchT("slip.json?t=" + Date.now(), { cache: "no-store" })).json();
     S = JSON.parse(await unlock(unb64(KEY), box));
     keepCtx(S.ctx);
     let C = null; try { C = JSON.parse(read("road_ctx")); } catch {}
     if (C && C.plan && S.cards) { S.rows = size(S.cards, C); S.bank = C.bank; S.bank_at = C.at; S.note = ""; }  // sized here (J-2318)
     TICKS = JSON.parse(read("road_ticks_" + S.date) || "{}");
     draw();
+    return null;
   } catch (e) {
-    $("sum").textContent = e.message === "key" ? "This link's key doesn't open the slip. Open the newest link from Today's plays on your PC."
-      : "Can't load the slip right now (no signal?). Tap Refresh to try again.";
+    const why = e.message === "key" ? "This link's key doesn't open the slip. Open the newest link from Today's plays on your PC."
+      : "The slip didn't load (no signal?). Tap Refresh to try again.";
+    if (!S || e.message === "key") $("sum").textContent = why;
+    return why;
   }
 }
 function draw() {
@@ -149,10 +172,22 @@ function draw() {
     if (TICKS[key]) delete TICKS[key]; else TICKS[key] = new Date().toISOString();
     store("road_ticks_" + S.date, JSON.stringify(TICKS)); draw();
   });
-  if ($("send")) $("send").onclick = () => { location.href = S.home + "#road=" + b64(JSON.stringify(rows.filter(r => TICKS[r.key]))); };
+  if ($("send")) $("send").onclick = () => {
+    const b = $("send"); if (b.disabled) return;
+    b.disabled = true; b.textContent = "Opening the slip on your PC…"; say("Opening the slip on your PC…", "wait");
+    setTimeout(() => { b.disabled = false; b.textContent = "Press again to send";  // still here: the PC didn't answer
+      say("✗ Not sent: your PC didn't answer. Check you are on your home Wi-Fi with the PC on, then press again.", "bad"); }, 15000);
+    location.href = S.home + "#road=" + b64(JSON.stringify(rows.filter(r => TICKS[r.key])));
+  };
 }
 $("hide").onclick = () => { HIDE = !HIDE; store("slip_hide", HIDE ? "1" : "0"); if (S) draw(); };
-$("reload").onclick = get;
+$("reload").onclick = async () => {
+  const b = $("reload"); if (b.disabled) return;
+  b.disabled = true; b.textContent = "Refreshing…"; say("Getting the newest slip…", "wait");
+  const why = await get();
+  b.disabled = false; b.textContent = "Refresh";
+  if (why) say("✗ Not refreshed: " + why, "bad"); else say(`✓ Up to date at ${clock()}.`, "good");
+};
 get();
 document.addEventListener("visibilitychange", () => { if (!document.hidden) get(); });
 </script>
