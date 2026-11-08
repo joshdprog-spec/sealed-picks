@@ -89,7 +89,7 @@ function size(cards, ctx) {
     if (book) { bet.price = amer(d); bet.book = DATA_BOOKS[book]; }
     const pp = planPlay(plan, c.ids), minP = "minPrice" in plan ? plan.minPrice : -500;
     if (!pp || (minP && d <= 1 + 100 / -minP + 1e-9)) continue;
-    const amt = Math.floor(planStake(plan, bank, d, pp.edge, c.sport, c.market, c.green === "green" ? 1.2 : c.green === "red" ? 0.5 : 1));
+    const amt = Math.floor(planStake(plan, bank, d, pp.edge, c.sport, c.market, c.size ? +c.size : c.green === "green" ? 1.2 : c.green === "red" ? 0 : 1));
     if (amt < 1) continue;
     bet.stake = amt;
     rows.push({ key: slipKey(bet), book: book ? DATA_BOOKS[book] : bet.book || "Best price", time: c.time, start: c.start, label: c.label,
