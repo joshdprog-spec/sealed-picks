@@ -130,7 +130,7 @@ async function get() {
     S = JSON.parse(await unlock(unb64(KEY), box));
     keepCtx(S.ctx);
     let C = null; try { C = JSON.parse(read("road_ctx")); } catch {}
-    if (C && C.plan && S.cards) { S.rows = size(S.cards, C); S.bank = C.bank; S.bank_at = C.at; S.note = ""; }  // sized here (J-2318)
+    if (C && C.plan && S.cards) { S.rows = size(S.cards, C); S.bank = C.bank; S.bank_at = C.at; S.note = C.auto ? S.note : ""; }  // sized here (J-2318)
     TICKS = JSON.parse(read("road_ticks_" + S.date) || "{}");
     draw();
     return null;
