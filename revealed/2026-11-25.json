@@ -1,0 +1,6 @@
+{
+ "date": "2026-11-25",
+ "fingerprint": "2f922c0a7e2aa48fe5f9dfdfe5b2af5ae72a21ea855c05ae79f88e0aad21e891",
+ "key": "770e2f16662b89206431bb2b760816a8",
+ "payload": "[{\"away\":\"GB\",\"bet\":\"Green Bay Packers +2.5 (spread)\",\"book\":\"Caesars\",\"date\":\"2026-11-25\",\"game\":\"Green Bay Packers at Los Angeles Rams\",\"green\":\"green\",\"home\":\"LA\",\"kind\":\"search find\",\"line\":2.5,\"market\":\"spread\",\"price\":-105,\"side\":\"away\",\"size\":1.2,\"sport\":\"nfl\",\"start\":\"2026-11-26T01:00:00+00:00\"}]"
+}
